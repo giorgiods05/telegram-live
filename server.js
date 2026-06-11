@@ -33,7 +33,7 @@ app.post('/api/verify', (req, res) => {
   return res.json({ ok: true, youtubeVideoId: YOUTUBE_VIDEO_ID });
 });
 
-app.get('*', (req, res) => {
+app.use((req, res) => {
   res.sendFile(path.join(__dirname, 'public', 'index.html'));
 });
 
