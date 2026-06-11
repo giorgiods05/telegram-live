@@ -51,10 +51,20 @@ function getHlsUrl() {
 
 app.post('/api/verify', (req, res) => {
   const { initData } = req.body;
+  console.log('--- NUOVA RICHIESTA ---');
+  console.log('initData ricevuto:', initData ? 'PRESENTE' : 'VUOTO');
+  console.log('BOT_TOKEN presente:', BOT_TOKEN ? 'SI' : 'NO');
+  console.log('YOUTUBE_VIDEO_ID:', YOUTUBE_VIDEO_ID);
+  
   if (!verifyTelegramInitData(initData)) {
+    console.log('ERRORE: verifica initData fallita');
     return res.status(401).json({ error: 'Accesso negato' });
   }
+  
+  console.log('Verifica OK, recupero stream...');
   const hlsUrl = getHlsUrl();
+  console.log('HLS URL:', hlsUrl ? 'TROVATO' : 'NON TROVATO');
+  
   if (!hlsUrl) {
     return res.status(500).json({ error: 'Stream non disponibile' });
   }
