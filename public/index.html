@@ -7,26 +7,22 @@
   <script src="https://telegram.org/js/telegram-web-app.js"></script>
   <style>
     * { margin: 0; padding: 0; box-sizing: border-box; }
-    body { background: #000; color: #fff; font-family: sans-serif;
-           display: flex; justify-content: center; align-items: center;
-           height: 100vh; text-align: center; overflow: hidden; }
-    #message { font-size: 18px; padding: 20px; line-height: 1.6; }
-    #wrapper { display: none; position: fixed; top: 0; left: 0;
-               width: 100%; height: 100%; }
-    #wrapper iframe { width: 100%; height: 100%; border: none; }
-    #overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-               z-index: 10; background: transparent; }
-    #overlay-bottom { position: fixed; bottom: 0; left: 0;
-                      width: 100%; height: 60px;
-                      z-index: 11; background: #000;
-                      transition: opacity 0.3s; }
-    #overlay-top { position: fixed; top: 0; left: 0;
-                   width: 100%; height: 40px;
-                   z-index: 11; background: #000;
-                   transition: opacity 0.3s; }
-    #play-btn { position: fixed; top: 50%; left: 50%; 
+    html, body { width: 100%; height: 100%; background: #000; overflow: hidden; }
+    #message { color: #fff; font-family: sans-serif; font-size: 18px;
+               padding: 20px; line-height: 1.6; text-align: center;
+               position: fixed; top: 50%; left: 50%;
+               transform: translate(-50%, -50%); }
+    #wrapper { display: none; position: fixed;
+               top: 0; left: 0; width: 100%; height: 100%; }
+    #yt { position: absolute; top: 50%; left: 50%;
+          width: 100%; height: 100%;
+          transform: translate(-50%, -50%);
+          border: none; pointer-events: none; }
+    #overlay { position: fixed; top: 0; left: 0;
+               width: 100%; height: 100%; z-index: 10; }
+    #play-btn { position: fixed; top: 50%; left: 50%;
                 transform: translate(-50%, -50%);
-                z-index: 20; background: rgba(255,255,255,0.15);
+                z-index: 20; background: rgba(255,255,255,0.2);
                 border: 2px solid white; border-radius: 50%;
                 width: 80px; height: 80px; cursor: pointer;
                 display: none; align-items: center; justify-content: center; }
@@ -38,8 +34,6 @@
   <div id="wrapper">
     <iframe id="yt" allow="autoplay; fullscreen" allowfullscreen></iframe>
     <div id="overlay" oncontextmenu="return false;"></div>
-    <div id="overlay-top"></div>
-    <div id="overlay-bottom"></div>
     <div id="play-btn" onclick="startPlay()">
       <svg viewBox="0 0 24 24"><polygon points="5,3 19,12 5,21"/></svg>
     </div>
@@ -49,23 +43,6 @@
     tg.ready();
     tg.expand();
     document.addEventListener('contextmenu', e => e.preventDefault());
-
-    const overlayTop = document.getElementById('overlay-top');
-    const overlayBottom = document.getElementById('overlay-bottom');
-
-    tg.onEvent('viewportChanged', function(e) {
-      if (e.isStateStable) {
-        const isExpanded = tg.isExpanded;
-        const ratio = tg.viewportHeight / window.screen.height;
-        if (ratio > 0.92) {
-          overlayTop.style.opacity = '0';
-          overlayBottom.style.opacity = '0';
-        } else {
-          overlayTop.style.opacity = '1';
-          overlayBottom.style.opacity = '1';
-        }
-      }
-    });
 
     function startPlay() {
       const iframe = document.getElementById('yt');
@@ -86,7 +63,7 @@
         }
         const { youtubeVideoId } = await res.json();
         const iframe = document.getElementById('yt');
-        iframe.src = `https://www.youtube.com/embed/${youtubeVideoId}?autoplay=0&controls=0&modestbranding=1&rel=0&showinfo=0&iv_load_policy=3`;
+        iframe.src = `https://www.youtube.com/embed/${youtubeVideoId}?autoplay=0&controls=0&modestbranding=1&rel=0&showinfo=0&iv_load_policy=3&disablekb=1`;
         document.getElementById('message').style.display = 'none';
         document.getElementById('wrapper').style.display = 'block';
         document.getElementById('play-btn').style.display = 'flex';
