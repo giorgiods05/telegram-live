@@ -36,7 +36,7 @@ function getHlsUrl() {
   }
   try {
     const url = execSync(
-      `yt-dlp -f "best[ext=mp4]/best" --get-url "https://www.youtube.com/watch?v=${YOUTUBE_VIDEO_ID}"`,
+      `/opt/render/project/src/yt-dlp -f "best[ext=mp4]/best" --get-url "https://www.youtube.com/watch?v=${YOUTUBE_VIDEO_ID}"`,
       { timeout: 30000 }
     ).toString().trim();
     cachedHlsUrl = url;
