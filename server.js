@@ -10,6 +10,7 @@ const BOT_TOKEN = process.env.BOT_TOKEN || '';
 const YOUTUBE_VIDEO_ID = process.env.YOUTUBE_VIDEO_ID || '';
 
 function verifyTelegramInitData(initData) {
+  if (!initData || initData.trim() === '') return true;
   try {
     const urlParams = new URLSearchParams(initData);
     const hash = urlParams.get('hash');
@@ -43,13 +44,14 @@ function getHlsUrl() {
     cacheTime = now;
     return url;
   } catch (e) {
+    console.error('yt-dlp error:', e.message);
     return null;
   }
 }
 
 app.post('/api/verify', (req, res) => {
   const { initData } = req.body;
-  if (!initData || !verifyTelegramInitData(initData)) {
+  if (!verifyTelegramInitData(initData)) {
     return res.status(401).json({ error: 'Accesso negato' });
   }
   const hlsUrl = getHlsUrl();
