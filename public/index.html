@@ -7,26 +7,24 @@
   <script src="https://telegram.org/js/telegram-web-app.js"></script>
   <style>
     * { margin: 0; padding: 0; box-sizing: border-box; }
-    html, body { width: 100%; height: 100%; background: #000; overflow: hidden; }
-    #message { color: #fff; font-family: sans-serif; font-size: 18px;
-               padding: 20px; line-height: 1.6; text-align: center;
-               position: fixed; top: 50%; left: 50%;
-               transform: translate(-50%, -50%); }
-    #wrapper { display: none; position: fixed;
-               top: 0; left: 0; width: 100%; height: 100%; }
-    #yt { position: absolute; top: 50%; left: 50%;
-          width: 100%; height: calc(100% - 120px);
-          transform: translate(-50%, -50%);
-          border: none; }
-    #banda-top { position: fixed; top: 0; left: 0;
-                 width: 100%; height: 60px;
-                 background: #000; z-index: 10; }
-    #banda-bottom { position: fixed; bottom: 0; left: 0;
-                    width: 100%; height: 60px;
-                    background: #000; z-index: 10; }
-    #play-btn { position: fixed; top: 50%; left: 50%;
+    body { background: #000; color: #fff; font-family: sans-serif;
+           display: flex; justify-content: center; align-items: center;
+           height: 100vh; text-align: center; overflow: hidden; }
+    #message { font-size: 18px; padding: 20px; line-height: 1.6; }
+    #wrapper { display: none; position: fixed; top: 0; left: 0;
+               width: 100%; height: 100%; }
+    #wrapper iframe { width: 100%; height: 100%; border: none; }
+    #overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+               z-index: 10; background: transparent; }
+    #overlay-bottom { position: fixed; bottom: 0; left: 0;
+                      width: 100%; height: 60px;
+                      z-index: 11; background: #000; }
+    #overlay-top { position: fixed; top: 0; left: 0;
+                   width: 100%; height: 40px;
+                   z-index: 11; background: #000; }
+    #play-btn { position: fixed; top: 50%; left: 50%; 
                 transform: translate(-50%, -50%);
-                z-index: 20; background: rgba(255,255,255,0.2);
+                z-index: 20; background: rgba(255,255,255,0.15);
                 border: 2px solid white; border-radius: 50%;
                 width: 80px; height: 80px; cursor: pointer;
                 display: none; align-items: center; justify-content: center; }
@@ -36,9 +34,10 @@
 <body>
   <div id="message">⏳ Caricamento in corso...</div>
   <div id="wrapper">
-    <div id="banda-top"></div>
     <iframe id="yt" allow="autoplay; fullscreen" allowfullscreen></iframe>
-    <div id="banda-bottom"></div>
+    <div id="overlay" oncontextmenu="return false;"></div>
+    <div id="overlay-top"></div>
+    <div id="overlay-bottom"></div>
     <div id="play-btn" onclick="startPlay()">
       <svg viewBox="0 0 24 24"><polygon points="5,3 19,12 5,21"/></svg>
     </div>
@@ -51,7 +50,8 @@
 
     function startPlay() {
       const iframe = document.getElementById('yt');
-      iframe.src = iframe.src.replace('autoplay=0', 'autoplay=1');
+      const src = iframe.src;
+      iframe.src = src.replace('autoplay=0', 'autoplay=1');
       document.getElementById('play-btn').style.display = 'none';
     }
 
@@ -80,4 +80,3 @@
   </script>
 </body>
 </html>
- 
