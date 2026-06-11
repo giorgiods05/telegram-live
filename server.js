@@ -7,7 +7,7 @@ app.use(express.static('public'));
 
 const BOT_TOKEN = process.env.BOT_TOKEN || '';
 const YOUTUBE_VIDEO_ID = process.env.YOUTUBE_VIDEO_ID || '';
-const CHANNEL_ID = '-1001002299339420';
+const CHANNEL_ID = '-1003980379795';
 
 function verifyTelegramInitData(initData) {
   if (!initData || initData.trim() === '') return null;
