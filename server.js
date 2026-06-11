@@ -1,7 +1,6 @@
 const express = require('express');
 const crypto = require('crypto');
 const path = require('path');
-const { execSync } = require('child_process');
 const app = express();
 app.use(express.json());
 app.use(express.static('public'));
@@ -27,48 +26,12 @@ function verifyTelegramInitData(initData) {
   }
 }
 
-let cachedHlsUrl = null;
-let cacheTime = 0;
-
-function getHlsUrl() {
-  const now = Date.now();
-  if (cachedHlsUrl && (now - cacheTime) < 3600000) {
-    return cachedHlsUrl;
-  }
-  try {
-    const url = execSync(
-      `/opt/render/project/src/yt-dlp -f "best[ext=mp4]/best" --get-url "https://www.youtube.com/watch?v=${YOUTUBE_VIDEO_ID}"`,
-      { timeout: 30000 }
-    ).toString().trim();
-    cachedHlsUrl = url;
-    cacheTime = now;
-    return url;
-  } catch (e) {
-    console.error('yt-dlp error:', e.message);
-    return null;
-  }
-}
-
 app.post('/api/verify', (req, res) => {
   const { initData } = req.body;
-  console.log('--- NUOVA RICHIESTA ---');
-  console.log('initData ricevuto:', initData ? 'PRESENTE' : 'VUOTO');
-  console.log('BOT_TOKEN presente:', BOT_TOKEN ? 'SI' : 'NO');
-  console.log('YOUTUBE_VIDEO_ID:', YOUTUBE_VIDEO_ID);
-  
   if (!verifyTelegramInitData(initData)) {
-    console.log('ERRORE: verifica initData fallita');
     return res.status(401).json({ error: 'Accesso negato' });
   }
-  
-  console.log('Verifica OK, recupero stream...');
-  const hlsUrl = getHlsUrl();
-  console.log('HLS URL:', hlsUrl ? 'TROVATO' : 'NON TROVATO');
-  
-  if (!hlsUrl) {
-    return res.status(500).json({ error: 'Stream non disponibile' });
-  }
-  return res.json({ ok: true, streamUrl: hlsUrl });
+  return res.json({ ok: true, youtubeVideoId: YOUTUBE_VIDEO_ID });
 });
 
 app.use((req, res) => {
