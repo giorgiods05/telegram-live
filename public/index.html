@@ -6,53 +6,151 @@
   <title>Live Stream</title>
   <script src="https://telegram.org/js/telegram-web-app.js"></script>
   <style>
-    * { margin: 0; padding: 0; box-sizing: border-box; }
-    body { background: #000; color: #fff; font-family: sans-serif;
-           display: flex; justify-content: center; align-items: center;
-           height: 100vh; text-align: center; overflow: hidden; }
-    #message { font-size: 18px; padding: 20px; line-height: 1.6; }
-    #wrapper { display: none; position: fixed; top: 0; left: 0;
-               width: 100%; height: 100%; }
-    #wrapper iframe { width: 100%; height: 100%; border: none; }
-    #overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-               z-index: 10; background: transparent; }
-    #overlay-bottom { position: fixed; bottom: 0; left: 0;
-                      width: 100%; height: 60px;
-                      z-index: 11; background: #000; }
-    #overlay-top { position: fixed; top: 0; left: 0;
-                   width: 100%; height: 40px;
-                   z-index: 11; background: #000; }
-    #play-btn { position: fixed; top: 50%; left: 50%; 
-                transform: translate(-50%, -50%);
-                z-index: 20; background: rgba(255,255,255,0.15);
-                border: 2px solid white; border-radius: 50%;
-                width: 80px; height: 80px; cursor: pointer;
-                display: none; align-items: center; justify-content: center; }
-    #play-btn svg { width: 36px; height: 36px; fill: white; margin-left: 6px; }
+    * { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+    html, body { width: 100%; height: 100%; background: #000; overflow: hidden; }
+    #message { color: #fff; font-family: sans-serif; font-size: 18px;
+               padding: 20px; line-height: 1.6; text-align: center;
+               position: fixed; top: 50%; left: 50%;
+               transform: translate(-50%, -50%); }
+    #wrapper { display: none; position: fixed;
+               top: 0; left: 0; width: 100%; height: 100%; }
+    #yt { position: absolute; top: 50%; left: 50%;
+          width: 100%; height: 100%;
+          transform: translate(-50%, -50%);
+          border: none; pointer-events: none; }
+    #blocker { position: fixed; top: 0; left: 0;
+               width: 100%; height: 100%; z-index: 10;
+               background: transparent; }
+    #controls { position: fixed; bottom: 0; left: 0; right: 0;
+                z-index: 20; background: rgba(0,0,0,0.6);
+                padding: 14px 16px; display: flex;
+                align-items: center; gap: 16px;
+                opacity: 0; transition: opacity 0.3s; }
+    #controls.show { opacity: 1; }
+    #play-pause { background: none; border: none; cursor: pointer;
+                   padding: 0; display: flex; align-items: center; }
+    #play-pause svg { width: 32px; height: 32px; fill: white; }
+    #volume-slider { flex: 1; max-width: 150px; accent-color: white; }
+    #vol-icon { width: 24px; height: 24px; fill: white; }
+    #center-play { position: fixed; top: 50%; left: 50%;
+                   transform: translate(-50%, -50%);
+                   z-index: 20; background: rgba(255,255,255,0.2);
+                   border: 2px solid white; border-radius: 50%;
+                   width: 80px; height: 80px; cursor: pointer;
+                   display: none; align-items: center; justify-content: center; }
+    #center-play svg { width: 36px; height: 36px; fill: white; margin-left: 6px; }
   </style>
 </head>
 <body>
   <div id="message">⏳ Caricamento in corso...</div>
   <div id="wrapper">
-    <iframe id="yt" allow="autoplay; fullscreen" allowfullscreen></iframe>
-    <div id="overlay" oncontextmenu="return false;"></div>
-    <div id="overlay-top"></div>
-    <div id="overlay-bottom"></div>
-    <div id="play-btn" onclick="startPlay()">
+    <div id="yt"></div>
+    <div id="blocker" oncontextmenu="return false;" onclick="toggleControls()"></div>
+    <div id="center-play" onclick="startPlay()">
       <svg viewBox="0 0 24 24"><polygon points="5,3 19,12 5,21"/></svg>
     </div>
+    <div id="controls">
+      <button id="play-pause" onclick="togglePlay()">
+        <svg id="icon-pause" viewBox="0 0 24 24"><rect x="6" y="4" width="4" height="16"/><rect x="14" y="4" width="4" height="16"/></svg>
+        <svg id="icon-play" viewBox="0 0 24 24" style="display:none"><polygon points="5,3 19,12 5,21"/></svg>
+      </button>
+      <svg id="vol-icon" viewBox="0 0 24 24"><path d="M3 9v6h4l5 5V4L7 9H3zm13.5 3c0-1.77-1-3.29-2.5-4.03v8.05c1.5-.73 2.5-2.25 2.5-4.02zM14 3.23v2.06c2.89.86 5 3.54 5 6.71s-2.11 5.85-5 6.71v2.06c4.01-.91 7-4.49 7-8.77s-2.99-7.86-7-8.77z"/></svg>
+      <input type="range" id="volume-slider" min="0" max="100" value="100" oninput="setVolume(this.value)">
+    </div>
   </div>
+  <script src="https://www.youtube.com/iframe_api"></script>
   <script>
     const tg = window.Telegram.WebApp;
     tg.ready();
     tg.expand();
     document.addEventListener('contextmenu', e => e.preventDefault());
 
+    let player;
+    let isPlaying = false;
+    let controlsTimeout;
+
+    function onYouTubeIframeAPIReady() {
+      // il player viene creato dopo aver ricevuto il videoId
+    }
+
+    function createPlayer(videoId) {
+      player = new YT.Player('yt', {
+        videoId: videoId,
+        playerVars: {
+          autoplay: 0,
+          controls: 0,
+          modestbranding: 1,
+          rel: 0,
+          showinfo: 0,
+          iv_load_policy: 3,
+          disablekb: 1,
+          playsinline: 1
+        },
+        events: {
+          'onReady': onPlayerReady,
+          'onStateChange': onPlayerStateChange
+        }
+      });
+    }
+
+    function onPlayerReady(event) {
+      document.getElementById('center-play').style.display = 'flex';
+    }
+
+    function onPlayerStateChange(event) {
+      if (event.data === YT.PlayerState.PLAYING) {
+        isPlaying = true;
+        document.getElementById('icon-pause').style.display = 'block';
+        document.getElementById('icon-play').style.display = 'none';
+        showControls();
+      } else if (event.data === YT.PlayerState.PAUSED) {
+        isPlaying = false;
+        document.getElementById('icon-pause').style.display = 'none';
+        document.getElementById('icon-play').style.display = 'block';
+      }
+    }
+
     function startPlay() {
-      const iframe = document.getElementById('yt');
-      const src = iframe.src;
-      iframe.src = src.replace('autoplay=0', 'autoplay=1');
-      document.getElementById('play-btn').style.display = 'none';
+      player.playVideo();
+      document.getElementById('center-play').style.display = 'none';
+    }
+
+    function togglePlay() {
+      if (isPlaying) {
+        player.pauseVideo();
+      } else {
+        player.playVideo();
+      }
+      showControls();
+    }
+
+    function setVolume(val) {
+      player.setVolume(val);
+      if (val == 0) {
+        player.mute();
+      } else {
+        player.unMute();
+      }
+      showControls();
+    }
+
+    function showControls() {
+      const controls = document.getElementById('controls');
+      controls.classList.add('show');
+      clearTimeout(controlsTimeout);
+      controlsTimeout = setTimeout(() => {
+        controls.classList.remove('show');
+      }, 3000);
+    }
+
+    function toggleControls() {
+      const controls = document.getElementById('controls');
+      if (controls.classList.contains('show')) {
+        controls.classList.remove('show');
+        clearTimeout(controlsTimeout);
+      } else {
+        showControls();
+      }
     }
 
     async function init() {
@@ -63,15 +161,16 @@
           body: JSON.stringify({ initData: tg.initData })
         });
         if (!res.ok) {
-          document.getElementById('message').innerHTML = '🔒 Accesso negato.<br>Devi essere iscritto al canale.';
+          const err = await res.json();
+          document.getElementById('message').innerHTML = err.error === 'Non sei iscritto al canale'
+            ? '🔒 Non sei iscritto al canale.'
+            : '🔒 Accesso negato.';
           return;
         }
         const { youtubeVideoId } = await res.json();
-        const iframe = document.getElementById('yt');
-        iframe.src = `https://www.youtube.com/embed/${youtubeVideoId}?autoplay=0&controls=0&modestbranding=1&rel=0&showinfo=0&iv_load_policy=3`;
         document.getElementById('message').style.display = 'none';
         document.getElementById('wrapper').style.display = 'block';
-        document.getElementById('play-btn').style.display = 'flex';
+        createPlayer(youtubeVideoId);
       } catch (e) {
         document.getElementById('message').innerHTML = '❌ Errore di connessione.';
       }
