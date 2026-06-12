@@ -19,7 +19,7 @@
           transform: translate(-50%, -50%);
           border: none; pointer-events: none; }
     #blocker { position: fixed; top: 0; left: 0;
-               width: 100%; height: 100%; z-index: 10;
+               width: 100%; height: 100%; z-index: 5;
                background: transparent; }
     #controls { position: fixed; bottom: 0; left: 0; right: 0;
                 z-index: 20; background: rgba(0,0,0,0.6);
@@ -34,11 +34,11 @@
     #vol-icon { width: 24px; height: 24px; fill: white; }
     #center-play { position: fixed; top: 50%; left: 50%;
                    transform: translate(-50%, -50%);
-                   z-index: 20; background: rgba(255,255,255,0.2);
+                   z-index: 30; background: rgba(255,255,255,0.2);
                    border: 2px solid white; border-radius: 50%;
                    width: 80px; height: 80px; cursor: pointer;
                    display: none; align-items: center; justify-content: center; }
-    #center-play svg { width: 36px; height: 36px; fill: white; margin-left: 6px; }
+    #center-play svg { width: 36px; height: 36px; fill: white; margin-left: 6px; pointer-events: none; }
   </style>
 </head>
 <body>
@@ -68,12 +68,21 @@
     let player;
     let isPlaying = false;
     let controlsTimeout;
+    let pendingVideoId = null;
+    let apiReady = false;
 
     function onYouTubeIframeAPIReady() {
-      // il player viene creato dopo aver ricevuto il videoId
+      apiReady = true;
+      if (pendingVideoId) {
+        createPlayer(pendingVideoId);
+      }
     }
 
     function createPlayer(videoId) {
+      if (!apiReady) {
+        pendingVideoId = videoId;
+        return;
+      }
       player = new YT.Player('yt', {
         videoId: videoId,
         playerVars: {
@@ -111,7 +120,9 @@
     }
 
     function startPlay() {
-      player.playVideo();
+      if (player && typeof player.playVideo === 'function') {
+        player.playVideo();
+      }
       document.getElementById('center-play').style.display = 'none';
     }
 
