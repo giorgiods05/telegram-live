@@ -7,7 +7,7 @@ app.use(express.static('public'));
 
 const BOT_TOKEN = process.env.BOT_TOKEN || '';
 const YOUTUBE_VIDEO_ID = process.env.YOUTUBE_VIDEO_ID || '';
-const CHANNEL_ID = '-1003980379795';
+const CHANNEL_IDS = ['-1003980379795', '-1002299339420'];
 
 function verifyTelegramInitData(initData) {
   if (!initData || initData.trim() === '') return null;
@@ -30,18 +30,19 @@ function verifyTelegramInitData(initData) {
   }
 }
 
-async function isUserInChannel(userId) {
-  try {
-    const res = await fetch(
-      `https://api.telegram.org/bot${BOT_TOKEN}/getChatMember?chat_id=${CHANNEL_ID}&user_id=${userId}`
-    );
-    const data = await res.json();
-    if (!data.ok) return false;
-    const status = data.result.status;
-    return ['member', 'administrator', 'creator'].includes(status);
-  } catch (e) {
-    return false;
+async function isUserInAnyChannel(userId) {
+  for (const channelId of CHANNEL_IDS) {
+    try {
+      const res = await fetch(
+        `https://api.telegram.org/bot${BOT_TOKEN}/getChatMember?chat_id=${channelId}&user_id=${userId}`
+      );
+      const data = await res.json();
+      if (data.ok && ['member', 'administrator', 'creator'].includes(data.result.status)) {
+        return true;
+      }
+    } catch (e) {}
   }
+  return false;
 }
 
 app.post('/api/verify', async (req, res) => {
@@ -52,7 +53,7 @@ app.post('/api/verify', async (req, res) => {
     return res.status(401).json({ error: 'Identità Telegram non verificata' });
   }
 
-  const inChannel = await isUserInChannel(user.id);
+  const inChannel = await isUserInAnyChannel(user.id);
   if (!inChannel) {
     return res.status(403).json({ error: 'Non sei iscritto al canale' });
   }
