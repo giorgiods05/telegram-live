@@ -7,7 +7,7 @@ app.use(express.static('public'));
 
 const BOT_TOKEN = process.env.BOT_TOKEN || '';
 const YOUTUBE_VIDEO_ID = process.env.YOUTUBE_VIDEO_ID || '';
-const CHANNEL_IDS = ['-1003980379795', '-1002299339420'];
+const CHANNEL_IDS = ['-1003980379795', '-1002299339420', '-1002652550014'];
 
 let requestCount = 0;
 
